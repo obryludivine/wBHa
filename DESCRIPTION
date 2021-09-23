@@ -1,0 +1,32 @@
+Package: wBHa
+Title: wBHa
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Ludivine",
+           family = "Obry",
+           role = c("aut", "cre"),
+           email = "obry.ludivine@gmail.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: wBHa is an R package that implements a covariate multiple testing procedure specifically adapted in a Genome-Wide Association Studies context. wBHa allows better detection of rare variants (which where difficult to detect since the current existing procedures are not powerful enough) by better integrating external information while allowing the optimization of the overall power.
+License: GPL-3
+Encoding: UTF-8
+LazyData: false
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Suggests: 
+    knitr,
+    rmarkdown,
+    CAMT,
+    FDRreg,
+    IHW,
+    RColorBrewer,
+    qvalue,
+    swfdr,
+    venn,
+    UpSetR,
+    qpdf,
+    cowplot,
+    ggplot2,
+VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)
