@@ -1,0 +1,414 @@
+## ---- message=FALSE-----------------------------------------------------------
+library("ggplot2")
+library("cowplot")
+library("wBHa")
+
+## ----function-----------------------------------------------------------------
+get_legend<-function(myggplot){
+  # Allows to extract the legend of the graph "myggplot"
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+FDR_graph_design_ind <- function(design_tab,tag){
+  # Allows to make FDR graphics of "design_tab"
+  graph_FDR_ind <- ggplot(data=design_tab, aes(x=Procedure, y=FDR, fill=Procedure))+
+    geom_bar(stat="identity")+
+    labs(tag=tag)+
+    scale_fill_manual(values=c("#A6CEE3","#1F78B4","#7570B3","#1B9E77",
+                               "#DADAEB","#D9D9D9","#E69F00","#E31A1C"))+
+    geom_text(aes(label=paste(round(FDR*100,digits=1),sep=" ")), 
+              position=position_stack(0.5), color="white", 
+              fontface=c("bold"), size=2.5 )+
+    labs(y=c("FDR (%)")) +
+    facet_grid(m1~m, labeller=label_both,scales="free") +
+    theme(axis.ticks=element_blank(), 
+          axis.text=element_blank(),
+          axis.title.x=element_blank(),
+          legend.position="bottom",
+          strip.text.x = element_text(size=8),
+          strip.text.y = element_text(size=8),
+          panel.background=element_rect(fill="#F0F0F0", colour="#F0F0F0", 
+                                        size=0.5, linetype="solid"),
+          panel.grid.major=element_line(size=0.5, linetype="solid", 
+                                        colour="white"),
+          panel.grid.minor=element_line(size=0.25, linetype="solid", 
+                                        colour="white") )
+
+  return(graph_FDR_ind)
+}
+
+power_graph_design_ind <- function(design_tab,tag){
+  # Allows to make power graphics of "design_tab"
+  graph_power_ind <- ggplot(data=design_tab, aes(x=Procedure, y=Power, fill=Procedure))+
+    geom_bar(stat="identity")+
+    labs(tag=tag)+
+    scale_fill_manual(values=c("#A6CEE3","#1F78B4","#7570B3","#1B9E77",
+                               "#DADAEB","#D9D9D9","#E69F00","#E31A1C"))+
+    geom_text(aes(label=paste(round(Power*100,digits=1),sep=" ")), 
+              position=position_stack(0.5), color="white",
+              fontface=c("bold"), size=2.5)+
+    labs(y = c("Power (%)")) +
+    facet_grid(m1~m,labeller=label_both,scales="free") +
+    theme(axis.ticks=element_blank(),
+        axis.text=element_blank(),
+        axis.title.x=element_blank(),
+        legend.position="bottom",
+        strip.text.x = element_text(size=8),
+        strip.text.y = element_text(size=8),
+        panel.background=element_rect(fill="#F0F0F0", colour="#F0F0F0", 
+                                      size=0.5, linetype="solid"),
+        panel.grid.major=element_line(size=0.5, linetype="solid",
+                                      colour="white"),
+        panel.grid.minor=element_line(size=0.25, linetype="solid",
+                                      colour="white") )
+  
+  return(graph_power_ind)
+}
+
+subpower_graph_design_ind <- function(design_tab,tag){
+  # Allows to make subpower graphics of "design_tab"
+  subpower_graph <- ggplot(data=design_tab, aes(x=Procedure, y=Power, fill=Procedure))+
+    geom_bar(stat="identity")+
+    labs(tag=tag)+
+    labs(y = c("Power (%)")) +
+    scale_fill_manual(values=c("#A6CEE3","#1F78B4","#7570B3","#1B9E77",
+                               "#DADAEB","#D9D9D9","#E69F00","#E31A1C"))+
+    geom_text(aes(label=paste(round(Power*100,digits=1),sep=" ")), 
+              position=position_stack(0.5), color="white", 
+              fontface=c("bold"), size=2.5 )+
+    facet_grid(m1~m,labeller=label_both,scales="free") +
+    theme(axis.ticks=element_blank(), 
+          axis.text=element_blank(),
+          axis.title.x=element_blank(),
+          legend.position="bottom",
+          strip.text.x = element_text(size=8),
+          strip.text.y = element_text(size=8),
+          panel.background=element_rect(fill="#F0F0F0", colour="#F0F0F0", 
+                                        size=0.5, linetype="solid"),
+          panel.grid.major=element_line(size=0.5, linetype="solid", 
+                                        colour="white"),
+          panel.grid.minor=element_line(size=0.25, linetype="solid", 
+                                        colour="white") )
+  
+  return(subpower_graph)
+}
+
+## ----Initialization-----------------------------------------------------------
+data("simulation_data")
+size_n <- 2000
+r2 <- 0.2
+
+## ----Crea_Graphs--------------------------------------------------------------
+for (Case in c("independent","correlation")) {
+  if(Case==c("independent")){
+    vrho <- 0 #rho value
+    blsize <- 0 #bloc size 
+    graph_FDR_ind <- list(reference="", inverse="", constant="")
+    graph_power_ind <- list(reference="", inverse="", constant="")
+    graph_power_rare_ind <- list(reference="", inverse="", constant="")
+    
+    for (scenario in c("reference","inverse","constant")) {
+      
+      if(scenario=="reference"){
+        binary_beta=c("B_1.8_1.5_1.3_1.rda")
+        quantitative_beta=c("B3210.rda")
+      }
+      if(scenario=="inverse"){
+        binary_beta=c("B_1.3_1.5_1.8_1.rda")
+        quantitative_beta=c("B1230.rda")
+      }
+      if(scenario=="constant"){
+        binary_beta=c("B_1.5_1.5_1.5_1.rda")
+        quantitative_beta=c("B2220.rda")
+      }
+      
+      quantitative_tab<-list()
+      binary_tab<-list()
+      quantitative_tab_ss_gpe<-list()
+      binary_tab_ss_gpe<-list()
+      
+      i=1
+      
+      for (size_m in c(8000,14000,20000)) {
+        for(m1 in c(25,50,100,150)){
+          linear_file_in=paste("Res_LineR","n",size_n,"m",size_m,"m1",m1,"rho",vrho,
+                               "tb",blsize,"r2",r2,quantitative_beta,sep="_")
+          res_FDR_power <- simulation_data[[linear_file_in]]$res_FDR_power
+          res_Subpower <- simulation_data[[linear_file_in]]$res_Subpower
+          name_procedures <- c("BH","wBH","wBHa","IHW","qvalue","swfdr",
+                               "FDRreg","CAMT")
+            
+          # Quantitative dataframe containing power and FDR
+          quantitative_tab[[i]] <- data.frame(
+            name_procedures, unlist(c(res_FDR_power[-1,], use.names=F)),
+            c(rep(size_m,8)), c(rep(m1,8)), unlist(c(res_FDR_power[1,], 
+                                                     use.names=F)) )
+          colnames(quantitative_tab[[i]]) <- c("Procedure","Power","m","m1","FDR")
+            
+            
+          # Quantitative dataframe containing subpower
+          colnames(res_Subpower) <- c("X1","X2","X3")
+          quantitative_tab_ss_gpe[[i]] <- data.frame(
+            Procedure=name_procedures,
+            Power=c(res_Subpower$X1, res_Subpower$X2, res_Subpower$X3),
+            Subgroup=c(rep("Rare", length(res_Subpower[,1])),
+                       rep("Medium", length(res_Subpower[,1])),
+                       rep("Commun", length(res_Subpower[,1]))),
+            m=rep(size_m,24), m1=rep(m1,24) )
+          
+          logit_file_in=paste("Res_Logit","n",size_n,"m",size_m,"m1",m1,"rho",vrho,
+                              "tb",blsize,binary_beta,sep="_")
+          
+          res_FDR_power <- simulation_data[[logit_file_in]]$res_FDR_power
+          res_Subpower <- simulation_data[[logit_file_in]]$res_Subpower
+          name_procedures<-c("BH","wBH","wBHa","IHW","qvalue","swfdr",
+                             "FDRreg","CAMT")
+            
+          # Binary dataframe containing power and FDR
+          binary_tab[[i]]<-data.frame(
+            name_procedures, unlist(c(res_FDR_power[-1,],use.names=F)),
+            c(rep(size_m,8)), c(rep(m1,8)), unlist(c(res_FDR_power[1,],
+                                                     use.names=F)) )
+          colnames(binary_tab[[i]])<-c("Procedure","Power","m","m1","FDR")
+            
+          # Binary dataframe containing subpower
+          colnames(res_Subpower) <- c("X1","X2","X3")
+          binary_tab_ss_gpe[[i]] <- data.frame(
+            Procedure=name_procedures,
+            Power=c(res_Subpower$X1, res_Subpower$X2, res_Subpower$X3),
+            Subgroup=c(rep("Rare", length(res_Subpower[,1])),
+                       rep("Medium", length(res_Subpower[,1])),
+                       rep("Commun", length(res_Subpower[,1]))),
+            m=rep(size_m,24), m1=rep(m1,24))
+          
+          i=i+1
+        }
+      }
+      # Final dataframes formatting
+      quantitative_tab <- data.frame(Reduce(rbind, quantitative_tab))
+      binary_tab <- data.frame(Reduce(rbind, binary_tab))
+      quantitative_tab_ss_gpe <- data.frame(Reduce(rbind, quantitative_tab_ss_gpe))
+      quantitative_tab_rare <- subset(quantitative_tab_ss_gpe, 
+                                      quantitative_tab_ss_gpe$Subgroup=="Rare")
+      binary_tab_ss_gpe <- data.frame(Reduce(rbind, binary_tab_ss_gpe))
+      binary_tab_rare <- subset(binary_tab_ss_gpe,
+                                binary_tab_ss_gpe$Subgroup=="Rare")
+      
+      # Creation of FDR graphics
+      FDR_lineR <- FDR_graph_design_ind(quantitative_tab, "A")
+      FDR_logit <- FDR_graph_design_ind(binary_tab, "B")
+      legende <- get_legend(FDR_lineR)
+      FDR_lineR <- FDR_lineR+theme(legend.position="none")
+      FDR_logit <- FDR_logit+theme(legend.position="none")
+      graph_FDR_ind[[scenario]] <- plot_grid(FDR_lineR, FDR_logit, legende, 
+                                         ncol=1, rel_heights=c(2.3,2.3,0.5) )
+      
+      # Creation of power graphics
+      power_lineR <- power_graph_design_ind(quantitative_tab, "A")
+      power_logit <- power_graph_design_ind(binary_tab, "B")
+      legende <- get_legend(power_lineR)
+      power_lineR <- power_lineR+theme(legend.position="none")
+      power_logit <- power_logit+theme(legend.position="none")
+      graph_power_ind[[scenario]] <- plot_grid(power_lineR, power_logit, legende,
+                                           ncol=1, rel_heights=c(2.3,2.3,0.5) )
+      
+      # Creation of subpower graphics
+      power_rare_lineR <- subpower_graph_design_ind(quantitative_tab_rare, "A")
+      power_rare_logit <- subpower_graph_design_ind(binary_tab_rare, "B")
+      legende <- get_legend(power_rare_lineR)
+      power_rare_lineR <- power_rare_lineR+theme(legend.position="none")
+      power_rare_logit <- power_rare_logit+theme(legend.position="none")
+      graph_power_rare_ind[[scenario]] <- plot_grid(power_rare_lineR, power_rare_logit,
+                                                legende, ncol=1, 
+                                                rel_heights=c(2.3,2.3,0.5) )
+    }
+  }
+  if(Case==c("correlation")){
+    size_m <- 8000
+    m1 <- 50
+    blsize <- 10
+    
+    quantitative_tab<-list()
+    binary_tab<-list()
+    quantitative_tab_ss_gpe<-list()
+    binary_tab_ss_gpe<-list()
+    
+    i=1
+    
+    for (vrho in c(0.10,0.20,0.35,0.5,0.75)) {
+      linear_file_in <- paste("Res_LineR","n",size_n,"m",size_m,"m1",m1,"rho",vrho,
+                              "tb",blsize,"r2",r2,"B3210.rda",sep="_")
+      
+      res_FDR_power <- simulation_data[[linear_file_in]]$res_FDR_power
+      res_Subpower <- simulation_data[[linear_file_in]]$res_Subpower
+      name_procedures <- c("BH","wBH","wBHa","IHW","qvalue","swfdr",
+                           "FDRreg","CAMT")
+        
+      # Quantitative dataframe containing power and FDR
+      quantitative_tab[[i]] <- data.frame(
+        name_procedures, unlist(c(res_FDR_power[-1,],use.names=F)),
+        c(rep(vrho,8)), c(rep(m1,8)), unlist(c(res_FDR_power[1,],use.names=F)),
+        c(rep("Quantitatives",8)) )
+      colnames(quantitative_tab[[i]]) <- c("Procedure","Power","rho","m1",
+                                             "FDR","Traits")
+        
+      # Quantitative dataframe containing subpower
+      colnames(res_Subpower) <- c("X1","X2","X3")
+      quantitative_tab_ss_gpe[[i]] <- data.frame(
+        Procedure=name_procedures,
+        Power=c(res_Subpower$X1, res_Subpower$X2, res_Subpower$X3),
+        Subgroup=c(rep("Rare", length(res_Subpower[,1])),
+                   rep("Medium", length(res_Subpower[,1])),
+                   rep("Commun", length(res_Subpower[,1]))),
+        rho=rep(vrho,24), m1=rep(m1,24), Traits=rep("Quantitatives",24) )
+      
+      logit_file_in <- paste("Res_Logit","n",size_n,"m",size_m,"m1",m1,"rho",vrho,
+                             "tb",blsize,"B_1.8_1.5_1.3_1.rda",sep="_")
+      
+      res_FDR_power <- simulation_data[[logit_file_in]]$res_FDR_power
+      res_Subpower <- simulation_data[[logit_file_in]]$res_Subpower
+      name_procedures <- c("BH","wBH","wBHa","IHW","qvalue","swfdr",
+                           "FDRreg","CAMT")
+        
+        # Binary dataframe containing power and FDR
+        binary_tab[[i]] <- data.frame(
+          name_procedures, unlist(c(res_FDR_power[-1,],use.names=F)),
+          c(rep(vrho,8)), c(rep(m1,8)), unlist(c(res_FDR_power[1,],use.names=F)),
+          c(rep("Binaries",8)) )
+        colnames(binary_tab[[i]]) <- c("Procedure","Power","rho","m1",
+                                       "FDR","Traits")
+        
+        # Binary dataframe containing subpower
+        colnames(res_Subpower) <- c("X1","X2","X3")
+        binary_tab_ss_gpe[[i]] <- data.frame(
+          Procedure=name_procedures,
+          Power=c(res_Subpower$X1, res_Subpower$X2, res_Subpower$X3),
+          Subgroup=c(rep("Rare", length(res_Subpower[,1])), 
+                     rep("Medium", length(res_Subpower[,1])), 
+                     rep("Commun", length(res_Subpower[,1]))),
+          rho=rep(vrho,24), m1=rep(m1,24), Traits=rep("Binaries",24) )
+      
+      i=i+1
+    }
+    
+    # Final dataframes formatting
+    quantitative_tab <- data.frame(Reduce(rbind, quantitative_tab))
+    binary_tab <- data.frame(Reduce(rbind, binary_tab))
+    tab_corr <- rbind(quantitative_tab, binary_tab)
+    quantitative_tab_ss_gpe <- data.frame(Reduce(rbind, quantitative_tab_ss_gpe))
+    quantitative_tab_rare <- subset(quantitative_tab_ss_gpe,
+                                    quantitative_tab_ss_gpe$Subgroup=="Rare")
+    binary_tab_ss_gpe <- data.frame(Reduce(rbind, binary_tab_ss_gpe))
+    binary_tab_rare <- subset(binary_tab_ss_gpe, 
+                              binary_tab_ss_gpe$Subgroup=="Rare")
+    tab_rare_corr <- rbind(quantitative_tab_rare,binary_tab_rare)
+    
+    # Creation of FDR graphics
+    graph_FDR_corr <- ggplot(data=tab_corr, aes(x=Procedure, y=FDR, 
+                                                fill=Procedure))+ 
+      geom_bar(stat="identity")+
+      scale_fill_manual(values=c("#A6CEE3","#1F78B4","#7570B3","#1B9E77",
+                                 "#DADAEB","#D9D9D9","#E69F00","#E31A1C"))+
+      geom_hline(yintercept=0.05, linetype="dashed", color = "red") +
+      facet_grid(rho~Traits,labeller=label_both) +
+      theme(axis.ticks.x=element_blank(),
+            axis.text.x=element_blank(),
+            axis.title.x=element_blank(),
+            legend.position="bottom", 
+            strip.text.x = element_text(size=8),
+            strip.text.y = element_text(size=8),
+            panel.background=element_rect(fill="#F0F0F0", colour="#F0F0F0",
+                                          size=0.5, linetype="solid"),
+            panel.grid.major=element_line(size=0.5, linetype="solid",
+                                          colour="white"),
+            panel.grid.minor=element_line(size=0.25, linetype="solid", 
+                                          colour="white") )
+    
+    # Creation of power graphics
+    graph_power_corr <- ggplot(data=tab_corr, aes(x=Procedure, y=Power, 
+                                                  fill=Procedure))+
+      geom_bar(stat="identity")+
+      scale_fill_manual(values=c("#A6CEE3","#1F78B4","#7570B3","#1B9E77",
+                                 "#DADAEB","#D9D9D9","#E69F00","#E31A1C"))+
+      geom_text(aes(label=paste(round(Power*100,digits=1), "%", sep=" ")), 
+                position=position_stack(0.5), color="white", 
+                fontface=c("bold"), size=2.5)+
+      facet_grid(rho~Traits,labeller=label_both,scales="free") +
+      theme(axis.ticks=element_blank(),
+            axis.text=element_blank(),
+            axis.title.x=element_blank(),
+            legend.position="bottom",
+            strip.text.x = element_text(size=8),
+            strip.text.y = element_text(size=8),
+            panel.background=element_rect(fill="#F0F0F0", colour="#F0F0F0",
+                                          size=0.5, linetype="solid"),
+            panel.grid.major=element_line(size=0.5, linetype="solid", 
+                                          colour="white"),
+            panel.grid.minor=element_line(size=0.25, linetype="solid",
+                                          colour="white") )
+    
+    # Creation of subpower graphics
+    graph_subpower_corr <- ggplot(data=tab_rare_corr,aes(x=Procedure, y=Power, 
+                                                         fill=Procedure))+ 
+      geom_bar(stat="identity")+
+      scale_fill_manual(values=c("#A6CEE3","#1F78B4","#7570B3","#1B9E77",
+                                 "#DADAEB","#D9D9D9","#E69F00","#E31A1C"))+
+      geom_text(aes(label=paste(round(Power*100,digits=1),
+                                "%", sep=" ")),
+                position=position_stack(0.5), 
+                color="white",fontface = c("bold"), size=2.5 ) +
+      facet_grid(rho~Traits,labeller=label_both,scales="free") +
+      theme(axis.ticks=element_blank(), 
+            axis.text=element_blank(),
+            axis.title.x=element_blank(),
+            legend.position="bottom",
+            strip.text.x = element_text(size=8),
+            strip.text.y = element_text(size=8),
+            panel.background=element_rect(fill="#F0F0F0", colour="#F0F0F0",
+                                          size=0.5, linetype="solid"),
+            panel.grid.major=element_line(size=0.5, linetype="solid",
+                                          colour="white"),
+            panel.grid.minor=element_line(size=0.25, linetype="solid",
+                                          colour="white") )
+  }
+}
+
+## ----Ind_reference_power, fig.align='center', fig.width=8, fig.height=8-------
+graph_power_ind$reference
+
+## ----Ind_reference_subgp, fig.align='center', fig.width=8, fig.height=8-------
+graph_power_rare_ind$reference
+
+## ----Ind_reference_fdr, fig.align='center', fig.width=8, fig.height=8---------
+graph_FDR_ind$reference
+
+## ----Ind_inverse_power, fig.align='center', fig.width=8, fig.height=8---------
+graph_power_ind$inverse
+
+## ----Ind_inverse_subgp, fig.align='center', fig.width=8, fig.height=8---------
+graph_power_rare_ind$inverse
+
+## ----Ind_inverse_fdr, fig.align='center', fig.width=8, fig.height=8-----------
+graph_FDR_ind$inverse
+
+## ----Ind_constant_power, fig.align='center', fig.width=8, fig.height=8--------
+graph_FDR_ind$constant
+
+## ----Ind_constant_subgp, fig.align='center', fig.width=8, fig.height=8--------
+graph_power_ind$constant
+
+## ----Ind_constant_fdr, fig.align='center', fig.width=8, fig.height=8----------
+graph_power_rare_ind$constant
+
+## ----Corr_power, fig.align='center', fig.width=8, fig.height=8----------------
+graph_power_corr
+
+## ----Corr_subgp, fig.align='center', fig.width=8, fig.height=8----------------
+graph_subpower_corr
+
+## ----Corr_fdr, fig.align='center', fig.width=8, fig.height=8------------------
+graph_FDR_corr
+
