@@ -13,13 +13,13 @@
 
 ## Installation
 
-You can install the released version of wBHa from [CRAN](https://CRAN.R-project.org) with:
+You can install the current released version of wBHa from [CRAN](https://CRAN.R-project.org) with:
 
 ``` r
 install.packages("wBHa")
 ```
 
-It is also possible to install in-development versions from github.
+You can also install the current development version from github with:
 ``` r
 library(devtools)
 install_github("obryludivine/wBHa")
