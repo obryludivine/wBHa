@@ -19,6 +19,12 @@ You can install the released version of wBHa from [CRAN](https://CRAN.R-project.
 install.packages("wBHa")
 ```
 
+It is also possible to install in-development versions from github.
+``` r
+library(devtools)
+install_github("obryludivine/wBHa")
+```
+
 ## Example
 
 This is a basic example which shows you how to solve a common problem:
