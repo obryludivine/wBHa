@@ -1,6 +1,6 @@
 ^wBHa\.Rproj$
 ^\.Rproj\.user$
-^function (pvalues, covariates, alpha = 0\.05, K = 60) 
+^function (pvalues, covariates, alpha = 0\.05, K = 60)
 {
     random_bootstraps_list <- list()
     for (i in c(1:K)) {
