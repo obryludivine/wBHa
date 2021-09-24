@@ -20,9 +20,17 @@
 #' }
 #'
 #' @examples
-#' pvalues<-runif(100)
-#' covariates<-runif(100,1,2)
-#' wBHa(pvalues,covariates,alpha=0.05,K=60)
+#' set.seed(123)
+#'
+#' pvalues <- c(runif(100,0,0.1), runif(100,0,1))
+#' covariates <- runif(200,0.05,0.5)
+#' wBHa_object <- wBHa(pvalues, covariates, alpha=0.05, K=60)
+#'
+#' data("GSE90102_01")
+#' pvalues <- GSE90102_01$rawp
+#' covariates <- GSE90102_01$MAF
+#' wBHa_object <- wBHa(pvalues, covariates)
+#'
 #'
 #' @author Ludivine Obry
 #'

@@ -30,8 +30,19 @@ install_github("obryludivine/wBHa")
 This is a basic example which shows you how to solve a common problem:
 
 ``` r
+# Load package
 library(wBHa)
-## basic example code
+
+set.seed(123)
+
+pvalues <- c(runif(100,0,0.1), runif(100,0,1))
+covariates <- runif(200,0.05,0.5)
+wBHa_object <- wBHa(pvalues, covariates, alpha=0.05, K=60)
+
+data("GSE90102_01")
+pvalues <- GSE90102_01$rawp
+covariates <- GSE90102_01$MAF
+wBHa_object <- wBHa(pvalues, covariates)
 ```
 
 ## Contacts
