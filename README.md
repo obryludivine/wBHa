@@ -30,10 +30,10 @@ install_github("obryludivine/wBHa")
 This is a basic example which shows you how to solve a common problem:
 
 ``` r
+set.seed(123)
+
 # Load package
 library(wBHa)
-
-set.seed(123)
 
 pvalues <- c(runif(100,0,0.1), runif(100,0,1))
 covariates <- runif(200,0.05,0.5)
