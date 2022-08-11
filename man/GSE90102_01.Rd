@@ -7,8 +7,8 @@
 \format{
 A list with several components:
 \describe{
-\item{rawp}{P-value for association between SNP and Crohn's disease}
-\item{MAF}{Minor Allele Frequency (MAF) of SNP}
+\item{rawp}{P-value for association between SNP and Crohn's disease.}
+\item{MAF}{Minor Allele Frequency (MAF) of SNP.}
 }
 }
 \usage{

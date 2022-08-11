@@ -4,7 +4,7 @@
 \alias{wBHa}
 \title{wBHa Procedure}
 \usage{
-wBHa(pvalues, covariates, alpha = 0.05, K = 60)
+wBHa(pvalues, covariates, alpha = 0.05, K = 100, size = length(pvalues)/K)
 }
 \arguments{
 \item{pvalues}{Numeric vector of pvalues.}
@@ -13,7 +13,9 @@ wBHa(pvalues, covariates, alpha = 0.05, K = 60)
 
 \item{alpha}{Numeric in \code{[}0,1\code{]}, significance level of the multiple testing procedure. Default \code{alpha=0.05}.}
 
-\item{K}{Integer, number of bootstrap samples. Default \code{K=60}.}
+\item{K}{Integer, number of bootstrap samples. Default \code{K=100}.}
+
+\item{size}{Integer, size of bootstrap samples. Default \code{size=length(pvalues)/100}}
 }
 \value{
 \describe{

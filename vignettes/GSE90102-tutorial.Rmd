@@ -12,7 +12,7 @@ This vignette describes how to use the wBHa and other procedures on a GWAS datas
 As a part of Quality Control (QC) measures, only SNPs located on the autosome chromosomes were kept (13,793  SNPs were omitted). Next, 20,983 SNPs with call rate less than 95% and samples with genotyping rates less than 95% were excluded from analysis. Then, 1,330 SNPs with Hardy-Weinberg equilibrium p-value less than $1 \times 10^{–5}$ were eliminated. At last, 15,810 SNPs with minor allele frequency less than 0.10 were ejected. After all exclusion, 98 Japanese individuals including and 607,720 SNPs were analyzed for GWAS, in which we tested the association between the percentage of Paneth cell defect (quantitative phenotype) and genotype using a linear regression model. The p-values (GSE90102_01\$rawp) and Minor Allele Frequencies (GSE90102_01\$MAF) of the SNPs from this association test are available in the wBHa package (GSE90102_01).
 
 # Loading of used libraries
-```{r, message=FALSE}
+```{r message=FALSE}
 set.seed(123)
 library(IHW)
 library(qvalue)
@@ -66,8 +66,9 @@ pval_swfdr <- res_qvalue$qvalue
 rej_swfdr <- which(pval_swfdr<alpha)
 
 # FDRreg procedure
-pvalues[pvalues==1]<-(1-10^-7) 
-zscores <- qnorm(pvalues)
+pvalues2=pvalues
+pvalues2[pvalues2==1]<-(1-10^-7) 
+zscores <- qnorm(pvalues2)
 res_FDRreg <- FDRreg(zscores, as.matrix(covariates))
 pval_FDRreg <- res_FDRreg$FDR
 rej_FDRreg <- which(pval_FDRreg<alpha)
@@ -112,7 +113,7 @@ UpsetR_graph <- upset(fromList(rej_list), order.by="freq", mainbar.y.label="SNP"
 UpsetR_graph
 ```
 
-We note that BH, qvalue and swfdr procedures reject the same variants : reduction of the number of procedure. We also notice that the BH, qvalue and swfdr procedures reject the same variants $\Rightarrow$ reduction of the number of procedures. Moreover, we note that the FDRreg procedure rejects a similar number of markers as the BH, qvalue and swfdr procedures. 
+We note that the BH, qvalue and swfdr procedures reject the same variants $\Rightarrow$ reduction of the number of procedures. Moreover, we note that the FDRreg procedure rejects a small number of markers as was observed with the simulation data in the case of quantitative phenotypes.
 
 ```{r, echo=T, results='hide'}
 # reduction of the number of groups: 8 to 6
@@ -128,36 +129,39 @@ rej_list2 <- list(BH.qvalue.swfdr=rej_BH, wBH=rej_wBH, wBHa=rej_wBHa, IHW=rej_IH
 ### Histogram of rejects
 
 ```{r Histogram_subgoups, fig.align='center', fig.width=7, fig.height=5}
-calc_proportion_subgroup <- function(rej_vect){
-  # Allows to compute the proportion of causal SNPs in each subgroup
-  rares1 <- length(which((covariates[rej_vect]<0.05)==T))
-  rares2 <- length(which((covariates[rej_vect]<0.10)==T))-(rares1)
-  rares3 <- length(which((covariates[rej_vect]<0.15)==T))-(rares1+rares2)
+calc_number_subgroup <- function(rej_vect){
+  # Allows to compute the number of causal SNPs in each subgroup
+  rares1 <- length(which((covariates[rej_vect]<0.02)==T))
+  rares2 <- length(which((covariates[rej_vect]<0.03)==T))-(rares1)
+  rares3 <- length(which((covariates[rej_vect]<0.04)==T))-(rares1+rares2)
+  rares4 <- length(which((covariates[rej_vect]<0.05)==T))-(rares1+rares2+rares3)
+  rares5 <- length(which((covariates[rej_vect]<0.10)==T))-(rares1+rares2+rares3+rares4)
+  rares6 <- length(which((covariates[rej_vect]<0.15)==T))-(rares1+rares2+rares3+rares4+rares5)
+  rares7 <- length(which((covariates[rej_vect]<0.30)==T))-(rares1+rares2+rares3+rares4+rares5+rares6)
+  
   frequents <- length(which((covariates[rej_vect]>0.30)==T))
-  medium <- length(rej_vect)-(rares1+rares2+rares3+frequents)
-  nb<-c(rares1,rares2,rares3,medium,frequents)
-  prop <- (nb/length(rej_vect))*100
-  return(prop)
+  nb<-c(rares1,rares2,rares3,rares4,rares5,rares6,rares7,frequents)
+  return(nb)
 }
 
-prop_subgroup_tab <- as.data.frame(cbind(c(rep("BH.qvalue.swfdr",5), rep("wBH",5),
-                                           rep("wBHa",5), rep("IHW",5), 
-                                           rep("FDRreg",5), rep("CAMT",5)),
-                                         c("5.Rare (MAF<0.05)", 
-                                           "4.Rare (0.05<MAF<0.1)",
-                                           "3.Rare (0.1<MAF<0.15)", 
-                                           "2.Medium (0.15<MAF<0.3)", 
-                                           "1.Frequent (0.3<MAF)"),
+nb_subgroup_tab <- as.data.frame(cbind(c(rep("BH.qvalue.swfdr",8), rep("wBH",8),
+                                           rep("wBHa",8), rep("IHW",8), 
+                                           rep("FDRreg",8), rep("CAMT",8)),
+                                         c("8. MAF<0.02","7. 0.02<MAF<0.03",
+                                           "6. 0.03<MAF<0.04","5. 0.04<MAF<0.05",
+                                           "4. 0.05<MAF<0.10","3. 0.10<MAF<0.15",
+                                           "2. 0.15<MAF<0.30","1. 0.3<MAF"),
                                          unlist(lapply(rej_list2,
-                                                       calc_proportion_subgroup))))
-colnames(prop_subgroup_tab) <- c("Procedure", "Subgroups", "Proportion")
-prop_subgroup_tab$Proportion <- as.numeric(prop_subgroup_tab$Proportion)
+                                                       calc_number_subgroup))
+                                         ))
+colnames(nb_subgroup_tab) <- c("Procedure", "Subgroups", "Number")
+nb_subgroup_tab$Number <- as.numeric(nb_subgroup_tab$Number)
 
-subgroup_hist <- ggplot(data=prop_subgroup_tab, aes(x=Procedure, y=Proportion,
+subgroup_hist <- ggplot(data=nb_subgroup_tab, aes(x=Procedure, y=Number,
                                                     fill=Subgroups)) +
   geom_bar(stat="identity") + 
-  scale_fill_brewer(palette="Blues") +
-  labs(y="Proportion of rejected SNPs") +
+  scale_fill_brewer(palette="PuOr") +
+  labs(y="Number of rejected SNPs") +
   theme(panel.background=element_rect(fill="#F0F0F0", colour="#F0F0F0", 
                                       size=0.5, linetype="solid"), 
         panel.grid.major=element_line(size=0.5, linetype="solid", 
@@ -167,7 +171,7 @@ subgroup_hist <- ggplot(data=prop_subgroup_tab, aes(x=Procedure, y=Proportion,
 
 subgroup_hist
 ```
-We can note that wBHa focuses on rare markers (less than 5%). However, although this is also the case for the other weighted procedures combining the two types of approaches, these are less powerful for rare variants than wBHa.
+We can note that wBHa focuses on rare markers (less than 2%). However, although this is also the case for the other weighted procedures combining the two types of approaches, these are less powerful for rare variants than wBHa.
 
 ### Relationship to annotations 
 

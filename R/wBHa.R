@@ -4,13 +4,14 @@
 #' wBHa allows better detection of rare variants (which where difficult to detect since the current existing procedures are not powerful enough) by better integrating external information while allowing the optimization of the overall power.
 #'
 #'
-#' @importFrom stats p.adjust spline
+#' @importFrom stats p.adjust
 #'
 #'
 #' @param pvalues Numeric vector of pvalues.
 #' @param covariates Numeric vector of covariates independent under the H0 of the pvalue.
 #' @param alpha Numeric in \code{[}0,1\code{]}, significance level of the multiple testing procedure. Default \code{alpha=0.05}.
-#' @param K Integer, number of bootstrap samples. Default \code{K=60}.
+#' @param K Integer, number of bootstrap samples. Default \code{K=100}.
+#' @param size Integer, size of bootstrap samples. Default \code{size=length(pvalues)/100}
 #'
 #' @return
 #' \describe{
@@ -36,17 +37,11 @@
 #'
 #' @export
 
-wBHa <- function(pvalues, covariates, alpha=0.05, K=60){
+wBHa <- function(pvalues, covariates, alpha=0.05, K=100, size=length(pvalues)/K){
 
-  #Bootstraps
-  random_bootstraps_list<-list()
+  a_opt_bootstraps <- c()
   for (i in c(1:K)) {
-    random_bootstraps_list[[i]]<-sample(length(pvalues),length(pvalues)/K,replace=TRUE)
-  }
-
-  a_opt_bootstraps <- list()
-  for(i in 1:K){
-    random_bootstraps <- random_bootstraps_list[[i]]
+    random_bootstraps <-sample(length(pvalues),size,replace=TRUE)
 
     pvalues_in_sample <- pvalues[random_bootstraps]
     covariates_in_sample <- covariates[random_bootstraps]
@@ -65,20 +60,39 @@ wBHa <- function(pvalues, covariates, alpha=0.05, K=60){
       R_wBHa <- length(wBHa_rejects)
       R_wBHa_all <- c(R_wBHa_all, R_wBHa)
     }
-    res_spline <- spline(a_values, R_wBHa_all)
-    a_opt <- res_spline$x[which.max(res_spline$y)]
 
-    a_opt_bootstraps[[i]] <- a_opt
+    a_opt <- a_values[which(R_wBHa_all==max(R_wBHa_all))]
+
+    if(!FALSE%in%(diff(a_opt)==pas_a)){
+      a_opt <- max(a_opt)
+    }else{
+      a_opt_split<-split(a_opt, cumsum(c(1, diff(a_opt)!=pas_a)))
+      length_a_opt_split<-unlist(lapply(a_opt_split,length))
+      index_longest_interval<-which(length_a_opt_split==max(length_a_opt_split))
+      if(length(index_longest_interval)==1){
+        a_opt <-max(a_opt_split[[index_longest_interval]])
+      }else{
+        a_opt_longest_interval <- a_opt_split[index_longest_interval]
+        if(length(a_opt_longest_interval[[1]])==1){
+          a_opt_closest_interval <- unlist(a_opt_longest_interval[[
+            which.min(unlist(lapply(a_opt_longest_interval, function(vect){return(sum(abs(1-vect)))})))]])
+          a_opt<-max(a_opt_closest_interval)
+        }else{
+          a_opt_closest_interval <- unlist(a_opt_longest_interval[
+            which.min(unlist(lapply(a_opt_longest_interval, function(vect){return(sum(abs(1-vect)))})))])
+          a_opt<-max(a_opt_closest_interval)
+        }
+      }
+    }
+    a_opt_bootstraps <- c(a_opt_bootstraps,a_opt)
   }
+  final_a_opt <- mean(a_opt_bootstraps)
 
-  final_a_opt <- mean(unlist(a_opt_bootstraps))
   adjusted_covariates <- (covariates^final_a_opt)
   adjusted_pvalues <- p.adjust(pvalues/((length(pvalues)/sum(1/adjusted_covariates))*(1/adjusted_covariates)),method = "BH")
 
-  res<- list(final_a_opt=final_a_opt,
-             adjusted_covariates=adjusted_covariates,
-             adjusted_pvalues=adjusted_pvalues
-             )
-
-  return(res)
+  res <- list(final_a_opt=final_a_opt,
+              adjusted_covariates=adjusted_covariates,
+              adjusted_pvalues=adjusted_pvalues
+  )
 }
