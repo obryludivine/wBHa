@@ -18,6 +18,6 @@ data(simulation_data)
 Object of class list.
 }
 \description{
-A list containing 390 simulation datasets.
+A list containing 390 results from the simulation study.
 Each dataset contains two dataframes: res_FDR_power and res_Subpower.
 }

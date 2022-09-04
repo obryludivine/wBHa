@@ -50,8 +50,8 @@ wBHa <- function(pvalues, covariates, alpha=0.05, K=100, size=length(pvalues)/K)
     FDP_wBHa_all <- c()
     min_a <-0
     max_a <-10
-    pas_a <-0.1
-    a_values <- seq(min_a,max_a,pas_a)
+    step_a <-0.1
+    a_values <- seq(min_a,max_a,step_a)
     for (a in a_values) {
       covariates_in_sample_a <- (covariates_in_sample^a)
       wBHa_rejects <- which(p.adjust(pvalues_in_sample/
@@ -63,10 +63,10 @@ wBHa <- function(pvalues, covariates, alpha=0.05, K=100, size=length(pvalues)/K)
 
     a_opt <- a_values[which(R_wBHa_all==max(R_wBHa_all))]
 
-    if(!FALSE%in%(diff(a_opt)==pas_a)){
+    if(!FALSE%in%(diff(a_opt)==step_a)){
       a_opt <- max(a_opt)
     }else{
-      a_opt_split<-split(a_opt, cumsum(c(1, diff(a_opt)!=pas_a)))
+      a_opt_split<-split(a_opt, cumsum(c(1, diff(a_opt)!=step_a)))
       length_a_opt_split<-unlist(lapply(a_opt_split,length))
       index_longest_interval<-which(length_a_opt_split==max(length_a_opt_split))
       if(length(index_longest_interval)==1){
