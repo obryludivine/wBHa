@@ -1,10 +1,10 @@
-## ---- message=FALSE-----------------------------------------------------------------------------------------
+## ---- message=FALSE---------------------------------------------------------------------------------------
 library("ggplot2")
 library("cowplot")
 library("wBHa")
 
 
-## ----function-----------------------------------------------------------------------------------------------
+## ----function---------------------------------------------------------------------------------------------
 get_legend<-function(myggplot){
   # Allows to extract the legend of the graph "myggplot"
   tmp <- ggplot_gtable(ggplot_build(myggplot))
@@ -17,8 +17,10 @@ FDR_graph_design_ind <- function(design_tab,tag){
   # Allows to make FDR graphics of "design_tab" 
   # "design_tab" comes from the "simulation_data" of the wBHa package
   # "design_tab" contains the results obtained for the independent case
-  graph_FDR_ind <- ggplot(data=design_tab, aes(x=m, y=FDR2, colour=Procedure))+
-    geom_line(stat="identity",size=0.5)+geom_point(size=1.5)+
+  graph_FDR_ind <- ggplot(data=design_tab, aes(x=m, y=FDR2, colour=Procedure,shape=Procedure))+ 
+  geom_line(stat="identity",size=0.5)+
+    geom_point(size=rep(rep(c(2.5,2,1.75,1.75,2,1.5,1.75,1.75),8),3))+
+  scale_shape_manual(values=c(15,16,17,18,19,20,15,17))+
     labs(tag=tag)+
     scale_x_continuous(breaks=c(unique(design_tab$m)),
                        labels=c(as.character(unique(design_tab$m))))+
@@ -43,8 +45,10 @@ FDR_graph_design_corr <- function(design_tab,tag){
   # Allows to make FDR graphics of "design_tab" 
   # "design_tab" comes from the "simulation_data" of the wBHa package
   # "design_tab" contains the results obtained for the correlation case
-  graph_FDR_corr <- ggplot(data=design_tab, aes(x=rho, y=FDR2, colour=Procedure))+
-    geom_line(stat="identity",size=0.5)+geom_point(size=1.5)+
+  graph_FDR_corr <- ggplot(data=design_tab, aes(x=rho, y=FDR2, colour=Procedure,shape=Procedure))+ 
+  geom_line(stat="identity",size=0.5)+
+    geom_point(size=rep(rep(c(2.5,2,1.75,1.75,2,1.5,1.75,1.75),8),5))+
+  scale_shape_manual(values=c(15,16,17,18,19,20,15,17))+
     labs(tag=tag)+
     scale_x_continuous(breaks=c(unique(design_tab$rho)),
                        labels=c(as.character(unique(design_tab$rho))))+
@@ -69,8 +73,10 @@ power_graph_design_ind <- function(design_tab,tag){
   # Allows to make power graphics of "design_tab" 
   # "design_tab" comes from the "simulation_data" of the wBHa package
   # "design_tab" contains the results obtained for the independent case
-  graph_power_ind <- ggplot(data=design_tab,aes(x=m, y=Power2, colour=Procedure))+ 
-    geom_line(stat="identity",size=0.5)+geom_point(size=1.5)+
+  graph_power_ind <- ggplot(data=design_tab,aes(x=m, y=Power2, colour=Procedure,shape=Procedure))+ 
+  geom_line(stat="identity",size=0.5)+
+    geom_point(size=rep(rep(c(2.5,2,1.75,1.75,2,1.5,1.75,1.75),8),3))+
+  scale_shape_manual(values=c(15,16,17,18,19,20,15,17))+
     labs(tag=tag)+
     scale_x_continuous(breaks=c(unique(design_tab$m)),
                        labels=c(as.character(unique(design_tab$m))))+
@@ -95,8 +101,10 @@ power_graph_design_corr <- function(design_tab,tag){
   # Allows to make power graphics of "design_tab" 
   # "design_tab" comes from the "simulation_data" of the wBHa package
   # "design_tab" contains the results obtained for the correlation case
-  graph_power_corr <- ggplot(data=design_tab,aes(x=rho, y=Power2, colour=Procedure))+ 
-    geom_line(stat="identity",size=0.5)+geom_point(size=1.5)+
+  graph_power_corr <- ggplot(data=design_tab,aes(x=rho, y=Power2, colour=Procedure,shape=Procedure))+ 
+  geom_line(stat="identity",size=0.5)+
+    geom_point(size=rep(rep(c(2.5,2,1.75,1.75,2,1.5,1.75,1.75),8),5))+
+  scale_shape_manual(values=c(15,16,17,18,19,20,15,17))+
     labs(tag=tag)+
     scale_x_continuous(breaks=c(unique(design_tab$rho)),
                        labels=c(as.character(unique(design_tab$rho))))+
@@ -121,8 +129,10 @@ subpower_graph_design_ind <- function(design_tab,tag){
   # Allows to make subpower graphics of "design_tab" 
   # "design_tab" comes from the "simulation_data" of the wBHa package
   # "design_tab" contains the results obtained for the independent case
-  subpower_graph <- ggplot(data=design_tab, aes(x=m, y=Power2, colour=Procedure))+
-    geom_line(stat="identity",size=0.5)+geom_point(size=1.5)+
+  subpower_graph <- ggplot(data=design_tab, aes(x=m, y=Power2, colour=Procedure,shape=Procedure))+ 
+  geom_line(stat="identity",size=0.5)+
+    geom_point(size=rep(rep(c(2.5,2,1.75,1.75,2,1.5,1.75,1.75),8),3))+
+  scale_shape_manual(values=c(15,16,17,18,19,20,15,17))+
     labs(tag=tag)+
     labs(y = c("Power (%)")) +
     scale_x_continuous(breaks=c(unique(design_tab$m)),
@@ -147,8 +157,10 @@ subpower_graph_design_corr <- function(design_tab,tag){
   # Allows to make subpower graphics of "design_tab" 
   # "design_tab" comes from the "simulation_data" of the wBHa package
   # "design_tab" contains the results obtained for the correlation case
-  subpower_graph <- ggplot(data=design_tab, aes(x=rho, y=Power2, colour=Procedure))+
-    geom_line(stat="identity",size=0.5)+geom_point(size=1.5)+
+  subpower_graph <- ggplot(data=design_tab, aes(x=rho, y=Power2, colour=Procedure,shape=Procedure))+ 
+  geom_line(stat="identity",size=0.5)+
+    geom_point(size=rep(rep(c(2.5,2,1.75,1.75,2,1.5,1.75,1.75),8),5))+
+  scale_shape_manual(values=c(15,16,17,18,19,20,15,17))+
     labs(tag=tag)+
     labs(y = c("Power (%)")) +
     scale_x_continuous(breaks=c(unique(design_tab$rho)),
@@ -170,12 +182,12 @@ subpower_graph_design_corr <- function(design_tab,tag){
 }
 
 
-## ----Initialization-----------------------------------------------------------------------------------------
+## ----Initialization---------------------------------------------------------------------------------------
 data("simulation_data")
 size_n <- 2000 #number of individuals
 
 
-## ----Crea_Graphs--------------------------------------------------------------------------------------------
+## ----Crea_Graphs------------------------------------------------------------------------------------------
 for (Case in c("independent","correlation","semisimulation")) { 
   if(Case==c("independent")){ #case without correlations between SNPs
     vrho <- 0 #rho value
@@ -555,86 +567,86 @@ for (Case in c("independent","correlation","semisimulation")) {
 }
 
 
-## ----Ind_reference_power, fig.align='center', fig.width=8, fig.height=8-------------------------------------
+## ----Ind_reference_power, fig.align='center', fig.width=8, fig.height=8-----------------------------------
 graph_power_ind$reference
 
 
-## ----Ind_reference_subgp, fig.align='center', fig.width=8, fig.height=8-------------------------------------
+## ----Ind_reference_subgp, fig.align='center', fig.width=8, fig.height=8-----------------------------------
 graph_power_rare_ind$reference
 
 
-## ----Ind_reference_fdr, fig.align='center', fig.width=8, fig.height=8---------------------------------------
+## ----Ind_reference_fdr, fig.align='center', fig.width=8, fig.height=8-------------------------------------
 graph_FDR_ind$reference
 
 
-## ----Ind_inverse_power, fig.align='center', fig.width=8, fig.height=8---------------------------------------
+## ----Ind_inverse_power, fig.align='center', fig.width=8, fig.height=8-------------------------------------
 graph_power_ind$inverse
 
 
-## ----Ind_inverse_subgp, fig.align='center', fig.width=8, fig.height=8---------------------------------------
+## ----Ind_inverse_subgp, fig.align='center', fig.width=8, fig.height=8-------------------------------------
 graph_power_rare_ind$inverse
 
 
-## ----Ind_inverse_fdr, fig.align='center', fig.width=8, fig.height=8-----------------------------------------
+## ----Ind_inverse_fdr, fig.align='center', fig.width=8, fig.height=8---------------------------------------
 graph_FDR_ind$inverse
 
 
-## ----Ind_constant_power, fig.align='center', fig.width=8, fig.height=8--------------------------------------
+## ----Ind_constant_power, fig.align='center', fig.width=8, fig.height=8------------------------------------
 graph_power_ind$constant
 
 
-## ----Ind_constant_subgp, fig.align='center', fig.width=8, fig.height=8--------------------------------------
+## ----Ind_constant_subgp, fig.align='center', fig.width=8, fig.height=8------------------------------------
 graph_power_rare_ind$constant
 
 
-## ----Ind_constant_fdr, fig.align='center', fig.width=8, fig.height=8----------------------------------------
+## ----Ind_constant_fdr, fig.align='center', fig.width=8, fig.height=8--------------------------------------
 graph_FDR_ind$constant
 
 
-## ----Corr_reference_power, fig.align='center', fig.width=8, fig.height=8------------------------------------
+## ----Corr_reference_power, fig.align='center', fig.width=8, fig.height=8----------------------------------
 graph_power_corr$reference
 
 
-## ----Corr_reference_subgp, fig.align='center', fig.width=8, fig.height=8------------------------------------
+## ----Corr_reference_subgp, fig.align='center', fig.width=8, fig.height=8----------------------------------
 graph_power_rare_corr$reference
 
 
-## ----Corr_reference_fdr, fig.align='center', fig.width=8, fig.height=8--------------------------------------
+## ----Corr_reference_fdr, fig.align='center', fig.width=8, fig.height=8------------------------------------
 graph_FDR_corr$reference
 
 
-## ----Corr_inverse_power, fig.align='center', fig.width=8, fig.height=8--------------------------------------
+## ----Corr_inverse_power, fig.align='center', fig.width=8, fig.height=8------------------------------------
 graph_power_corr$inverse
 
 
-## ----Corr_inverse_subgp, fig.align='center', fig.width=8, fig.height=8--------------------------------------
+## ----Corr_inverse_subgp, fig.align='center', fig.width=8, fig.height=8------------------------------------
 graph_power_rare_corr$inverse
 
 
-## ----Corr_inverse_fdr, fig.align='center', fig.width=8, fig.height=8----------------------------------------
+## ----Corr_inverse_fdr, fig.align='center', fig.width=8, fig.height=8--------------------------------------
 graph_FDR_corr$inverse
 
 
-## ----Corr_constant_power, fig.align='center', fig.width=8, fig.height=8-------------------------------------
+## ----Corr_constant_power, fig.align='center', fig.width=8, fig.height=8-----------------------------------
 graph_power_corr$constant
 
 
-## ----Corr_constant_subgp, fig.align='center', fig.width=8, fig.height=8-------------------------------------
+## ----Corr_constant_subgp, fig.align='center', fig.width=8, fig.height=8-----------------------------------
 graph_power_rare_corr$constant
 
 
-## ----Corr_constant_fdr, fig.align='center', fig.width=8, fig.height=8---------------------------------------
+## ----Corr_constant_fdr, fig.align='center', fig.width=8, fig.height=8-------------------------------------
 graph_FDR_corr$constant
 
 
-## ----Semisimu_power, fig.align='center', fig.width=8, fig.height=4------------------------------------------
+## ----Semisimu_power, fig.align='center', fig.width=8, fig.height=4----------------------------------------
 graph_power_semisimu
 
 
-## ----Semisimu_subgp, fig.align='center', fig.width=8, fig.height=4------------------------------------------
+## ----Semisimu_subgp, fig.align='center', fig.width=8, fig.height=4----------------------------------------
 graph_power_rare_semisimu
 
 
-## ----Semisimu_fdr, fig.align='center', fig.width=8, fig.height=4--------------------------------------------
+## ----Semisimu_fdr, fig.align='center', fig.width=8, fig.height=4------------------------------------------
 graph_FDR_semisimu
 

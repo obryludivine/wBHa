@@ -1,1 +1,178 @@
+## ----message=FALSE----------------------------------------------------------------------------------------
+set.seed(123)
+library(IHW)
+library(qvalue)
+library(swfdr)
+library(FDRreg)
+library(CAMT)
+library(wBHa)
+library(UpSetR)
+library(venn)
+library(RColorBrewer)
+
+
+## ----Application, fig.align='center'----------------------------------------------------------------------
+data("GSE90102_01") # load the dataset from the wBHa package
+
+# Initialization of parameters
+alpha <- 0.05 # alpha significance level set at 5%
+pvalues <- GSE90102_01$rawp # extraction of the p-values
+covariates <- GSE90102_01$MAF # extraction of the covariates
+
+
+# wBHa procedure
+res_wBHa <- wBHa(pvalues, covariates, alpha) # use of the wBHa method 
+pval_wBHa <- res_wBHa$adjusted_pvalues # saving of adjusted p-values
+rej_wBHa <- which(pval_wBHa<=alpha) # saving the rejected SNPs
+
+
+# BH procedure 
+pval_BH <- p.adjust(pvalues, method="BH")
+rej_BH <- which(pval_BH<=alpha)
+
+# IHW procedure
+res_IHW <- ihw(pvalues~covariates, alpha=alpha)
+pval_IHW <- adj_pvalues(res_IHW)
+rej_IHW <- which(pval_IHW<alpha)
+
+# wBH procedure
+pval_wBH <- p.adjust(pvalues/((length(pvalues)/sum(1/covariates))*(1/covariates)),
+                     method="BH") 
+rej_wBH <- which(pval_wBH<=alpha)
+
+# Qvalue procedure
+res_qvalue <- qvalue(pvalues) 
+pval_qvalue <- res_qvalue$qvalues
+rej_qvalue <- which(pval_qvalue<alpha)
+
+# Swfdr procedure
+res_qvalue <- lm_qvalue(pvalues, covariates) 
+pval_swfdr <- res_qvalue$qvalue
+rej_swfdr <- which(pval_swfdr<alpha)
+
+# FDRreg procedure
+pvalues2=pvalues
+pvalues2[pvalues2==1]<-(1-10^-7) 
+zscores <- qnorm(pvalues2)
+res_FDRreg <- FDRreg(zscores, as.matrix(covariates))
+pval_FDRreg <- res_FDRreg$FDR
+rej_FDRreg <- which(pval_FDRreg<alpha)
+
+# CAMT procedure
+res_CAMT <- camt.fdr(pvals=pvalues,pi0.var=covariates)
+pval_CAMT <- res_CAMT$fdr
+rej_CAMT <- which(c(pval_CAMT<alpha))
+
+rej_list <- list(BH=rej_BH, wBH=rej_wBH, wBHa=rej_wBHa, IHW=rej_IHW, 
+                 qvalue=rej_qvalue, swfdr=rej_swfdr, FDRreg=rej_FDRreg, 
+                 CAMT=rej_CAMT) # list of rejected SNPs for each procedure
+
+
+## ----Histogram_rejects, fig.align='center', fig.width=7, fig.height=5-------------------------------------
+rej_tab <- data.frame(Procedure=c("BH", "wBH", "wBHa", "IHW", "qvalue", "swfdr",
+                                  "FDRreg", "CAMT"), 
+                      Power=unlist(lapply(rej_list, length)))
+
+rej_histogram <- ggplot(data=rej_tab, aes(x=Procedure, y=Power, fill=Procedure)) + 
+  geom_bar(stat="identity") + 
+  scale_fill_manual(values=c("#A6CEE3","#1F78B4","#7570B3","#1B9E77","#DADAEB",
+                             "#D9D9D9","#E69F00","#E31A1C")) + 
+  geom_text(aes(label=round(Power,digits=1)), position=position_stack(0.5),
+            color="white", fontface=c("bold")) + 
+  theme(panel.background=element_rect(fill="#F0F0F0", colour="#F0F0F0", 
+                                      size=0.5, linetype="solid"), 
+        panel.grid.major=element_line(size=0.5, linetype="solid", 
+                                      colour="white"), 
+        panel.grid.minor=element_line(size=0.25, linetype="solid", 
+                                      colour="white"))
+rej_histogram
+
+
+## ----UpsetR, fig.align='center', fig.width=7, fig.height=5------------------------------------------------
+UpsetR_graph <- upset(fromList(rej_list), order.by="freq", mainbar.y.label="SNP",
+                      sets.x.label="Nb of rejections", nsets=8)
+UpsetR_graph
+
+
+## ---- echo=T, results='hide'------------------------------------------------------------------------------
+# reduction of the number of groups: 8 to 6
+rej_list$qvalue==rej_list$BH
+rej_list$swfdr==rej_list$BH
+rej_list2 <- list(BH.qvalue.swfdr=rej_BH, wBH=rej_wBH, wBHa=rej_wBHa, IHW=rej_IHW,
+                  FDRreg=rej_FDRreg, CAMT=rej_CAMT)
+
+
+## ----Histogram_subgoups, fig.align='center', fig.width=7, fig.height=5------------------------------------
+calc_number_subgroup <- function(rej_vect){
+  # Allows to compute the number of causal SNPs in each subgroup
+  rares1 <- length(which((covariates[rej_vect]<0.02)==T))
+  rares2 <- length(which((covariates[rej_vect]<0.03)==T))-(rares1)
+  rares3 <- length(which((covariates[rej_vect]<0.04)==T))-(rares1+rares2)
+  rares4 <- length(which((covariates[rej_vect]<0.05)==T))-(rares1+rares2+rares3)
+  rares5 <- length(which((covariates[rej_vect]<0.10)==T))-(rares1+rares2+rares3+rares4)
+  rares6 <- length(which((covariates[rej_vect]<0.15)==T))-(rares1+rares2+rares3+rares4+rares5)
+  rares7 <- length(which((covariates[rej_vect]<0.30)==T))-(rares1+rares2+rares3+rares4+rares5+rares6)
+  
+  frequents <- length(which((covariates[rej_vect]>0.30)==T))
+  nb<-c(rares1,rares2,rares3,rares4,rares5,rares6,rares7,frequents)
+  return(nb)
+}
+
+nb_subgroup_tab <- as.data.frame(cbind(c(rep("BH.qvalue.swfdr",8), rep("wBH",8),
+                                           rep("wBHa",8), rep("IHW",8), 
+                                           rep("FDRreg",8), rep("CAMT",8)),
+                                         c("8. MAF<0.02","7. 0.02<MAF<0.03",
+                                           "6. 0.03<MAF<0.04","5. 0.04<MAF<0.05",
+                                           "4. 0.05<MAF<0.10","3. 0.10<MAF<0.15",
+                                           "2. 0.15<MAF<0.30","1. 0.3<MAF"),
+                                         unlist(lapply(rej_list2,
+                                                       calc_number_subgroup)),
+                                       unlist(lapply(rej_list2,
+                                                     function(x){
+                                                       return(rep(c(length(x),rep(NA,7))))
+                                                       }))
+                                         ))
+colnames(nb_subgroup_tab) <- c("Procedure", "Subgroups", "Number","Total")
+nb_subgroup_tab$Number <- as.numeric(nb_subgroup_tab$Number)
+nb_subgroup_tab$Total<-as.numeric(nb_subgroup_tab$Total)
+
+
+subgroup_hist <- ggplot(data=nb_subgroup_tab, aes(x=Procedure, y=Number,
+                                                    fill=Subgroups)) +
+  geom_bar(stat="identity") + 
+  geom_text(aes(label=c(Total)),
+            position=position_stack(0.5),
+            y=113, color="black",
+            fontface = c("bold"),size=10)+
+  scale_fill_brewer(palette="PuOr") +
+  labs(y="Number of rejected SNPs") +
+  theme(panel.background=element_rect(fill="#F0F0F0", colour="#F0F0F0", 
+                                      size=0.5, linetype="solid"), 
+        panel.grid.major=element_line(size=0.5, linetype="solid", 
+                                      colour="white"), 
+        panel.grid.minor=element_line(size=0.25, linetype="solid", 
+                                      colour="white"))
+
+subgroup_hist
+
+
+## ----Relastionship_annot----------------------------------------------------------------------------------
+search_rank <- function(pval_vect,alpha=0.05){
+  # Allows to search the rank of the 3 SNPs present in our data for a given procedure
+  pval_rank_tab <- data.frame(rank=c(1:length(pval_vect)), pvalues=pval_vect)
+  pval_rank_tab_order <- pval_rank_tab[order(pval_rank_tab$pvalues),]
+  pval_rank_tab_order <- cbind(pval_rank_tab_order, c(1:length(pval_vect)))
+  pval_rank_tab_order_interest <- pval_rank_tab_order[c("565881","325191","561177"),] 
+  pval_rank_tab_order_interest <- data.frame(SNP=c("rs12494894","rs72622838","rs2238823"), 
+                                             Rank=pval_rank_tab_order_interest[,3], 
+                                             Threshold=length(which((pval_vect<alpha))))
+  return(pval_rank_tab_order_interest)
+}
+
+lapply(list(BH=pval_BH,CAMT=pval_CAMT,FDRreg=pval_FDRreg,IHW=pval_IHW,qvalue=pval_qvalue,
+            swfdr=pval_swfdr, wBH=pval_wBH,wBHa=pval_wBHa), search_rank)
+
+
+## ----Venn, fig.align='center', fig.width=7, fig.height=5--------------------------------------------------
+venn_diagram <- venn(rej_list2)
 

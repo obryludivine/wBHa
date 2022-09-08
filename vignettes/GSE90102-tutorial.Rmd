@@ -152,14 +152,24 @@ nb_subgroup_tab <- as.data.frame(cbind(c(rep("BH.qvalue.swfdr",8), rep("wBH",8),
                                            "4. 0.05<MAF<0.10","3. 0.10<MAF<0.15",
                                            "2. 0.15<MAF<0.30","1. 0.3<MAF"),
                                          unlist(lapply(rej_list2,
-                                                       calc_number_subgroup))
+                                                       calc_number_subgroup)),
+                                       unlist(lapply(rej_list2,
+                                                     function(x){
+                                                       return(rep(c(length(x),rep(NA,7))))
+                                                       }))
                                          ))
-colnames(nb_subgroup_tab) <- c("Procedure", "Subgroups", "Number")
+colnames(nb_subgroup_tab) <- c("Procedure", "Subgroups", "Number","Total")
 nb_subgroup_tab$Number <- as.numeric(nb_subgroup_tab$Number)
+nb_subgroup_tab$Total<-as.numeric(nb_subgroup_tab$Total)
+
 
 subgroup_hist <- ggplot(data=nb_subgroup_tab, aes(x=Procedure, y=Number,
                                                     fill=Subgroups)) +
   geom_bar(stat="identity") + 
+  geom_text(aes(label=c(Total)),
+            position=position_stack(0.5),
+            y=113, color="black",
+            fontface = c("bold"),size=10)+
   scale_fill_brewer(palette="PuOr") +
   labs(y="Number of rejected SNPs") +
   theme(panel.background=element_rect(fill="#F0F0F0", colour="#F0F0F0", 
