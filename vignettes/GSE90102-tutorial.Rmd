@@ -84,6 +84,13 @@ rej_list <- list(BH=rej_BH, wBH=rej_wBH, wBHa=rej_wBHa, IHW=rej_IHW,
 ```
 
 # Graphs
+
+## Maf of all SNPs
+```{r MafofallSNPs, fig.align='center', fig.width=7, fig.height=5}
+hist(covariates,nclass=50, xaxt='n',main="",xlab="MAF",cex.lab=1.5, cex.axis=1.5)
+axis(side=1, at=seq(0,0.5,0.05),cex.lab=1.5, cex.axis=1.5)
+```
+
 ## Overall power
 ### Histogram of rejects
 ```{r Histogram_rejects, fig.align='center', fig.width=7, fig.height=5}

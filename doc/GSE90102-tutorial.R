@@ -1,4 +1,4 @@
-## ----message=FALSE----------------------------------------------------------------------------------------
+## ----message=FALSE--------------------------------------------------------------------
 set.seed(123)
 library(IHW)
 library(qvalue)
@@ -11,7 +11,7 @@ library(venn)
 library(RColorBrewer)
 
 
-## ----Application, fig.align='center'----------------------------------------------------------------------
+## ----Application, fig.align='center'--------------------------------------------------
 data("GSE90102_01") # load the dataset from the wBHa package
 
 # Initialization of parameters
@@ -68,7 +68,12 @@ rej_list <- list(BH=rej_BH, wBH=rej_wBH, wBHa=rej_wBHa, IHW=rej_IHW,
                  CAMT=rej_CAMT) # list of rejected SNPs for each procedure
 
 
-## ----Histogram_rejects, fig.align='center', fig.width=7, fig.height=5-------------------------------------
+## ----MafofallSNPs, fig.align='center', fig.width=7, fig.height=5----------------------
+hist(covariates,nclass=50, xaxt='n',main="",xlab="MAF",cex.lab=1.5, cex.axis=1.5)
+axis(side=1, at=seq(0,0.5,0.05),cex.lab=1.5, cex.axis=1.5)
+
+
+## ----Histogram_rejects, fig.align='center', fig.width=7, fig.height=5-----------------
 rej_tab <- data.frame(Procedure=c("BH", "wBH", "wBHa", "IHW", "qvalue", "swfdr",
                                   "FDRreg", "CAMT"), 
                       Power=unlist(lapply(rej_list, length)))
@@ -88,13 +93,13 @@ rej_histogram <- ggplot(data=rej_tab, aes(x=Procedure, y=Power, fill=Procedure))
 rej_histogram
 
 
-## ----UpsetR, fig.align='center', fig.width=7, fig.height=5------------------------------------------------
+## ----UpsetR, fig.align='center', fig.width=7, fig.height=5----------------------------
 UpsetR_graph <- upset(fromList(rej_list), order.by="freq", mainbar.y.label="SNP",
                       sets.x.label="Nb of rejections", nsets=8)
 UpsetR_graph
 
 
-## ---- echo=T, results='hide'------------------------------------------------------------------------------
+## ---- echo=T, results='hide'----------------------------------------------------------
 # reduction of the number of groups: 8 to 6
 rej_list$qvalue==rej_list$BH
 rej_list$swfdr==rej_list$BH
@@ -102,7 +107,7 @@ rej_list2 <- list(BH.qvalue.swfdr=rej_BH, wBH=rej_wBH, wBHa=rej_wBHa, IHW=rej_IH
                   FDRreg=rej_FDRreg, CAMT=rej_CAMT)
 
 
-## ----Histogram_subgoups, fig.align='center', fig.width=7, fig.height=5------------------------------------
+## ----Histogram_subgoups, fig.align='center', fig.width=7, fig.height=5----------------
 calc_number_subgroup <- function(rej_vect){
   # Allows to compute the number of causal SNPs in each subgroup
   rares1 <- length(which((covariates[rej_vect]<0.02)==T))
@@ -156,7 +161,7 @@ subgroup_hist <- ggplot(data=nb_subgroup_tab, aes(x=Procedure, y=Number,
 subgroup_hist
 
 
-## ----Relastionship_annot----------------------------------------------------------------------------------
+## ----Relastionship_annot--------------------------------------------------------------
 search_rank <- function(pval_vect,alpha=0.05){
   # Allows to search the rank of the 3 SNPs present in our data for a given procedure
   pval_rank_tab <- data.frame(rank=c(1:length(pval_vect)), pvalues=pval_vect)
@@ -173,6 +178,6 @@ lapply(list(BH=pval_BH,CAMT=pval_CAMT,FDRreg=pval_FDRreg,IHW=pval_IHW,qvalue=pva
             swfdr=pval_swfdr, wBH=pval_wBH,wBHa=pval_wBHa), search_rank)
 
 
-## ----Venn, fig.align='center', fig.width=7, fig.height=5--------------------------------------------------
+## ----Venn, fig.align='center', fig.width=7, fig.height=5------------------------------
 venn_diagram <- venn(rej_list2)
 
