@@ -5,7 +5,7 @@
 \alias{simulation_data}
 \title{List of simulation datasets}
 \format{
-A list of 390 datasets, for each of them:
+A list of 426 datasets, for each of them:
 \describe{
 \item{res_FDR_power}{A dataframe containing the FDR and power of each procedure.}
 \item{res_Subpower}{A dataframe containing the subpower of each procedure.}
@@ -18,6 +18,6 @@ data(simulation_data)
 Object of class list.
 }
 \description{
-A list containing 390 results from the simulation study.
+A list containing 426 results from the simulation study.
 Each dataset contains two dataframes: res_FDR_power and res_Subpower.
 }
